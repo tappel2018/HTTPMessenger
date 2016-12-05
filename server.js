@@ -3,6 +3,8 @@ port        = process.env.PORT || 80,
 express         = require('express'),
 UUID            = require('uuid'),
 http            = require('http'),
+EventEmitter    = require('event'),
+
 
 verbose         = false,
 app             = express();
@@ -16,14 +18,18 @@ io = require('socket.io')( {
 
 
 clientWrapper = require("./clientWrapper.js");
+Room = require("./room.js");
+
 
 clients = [];
+rooms = [];
 
 
 /*Express server */
 
 app.get('/', function (req, res) {
   res.sendFile( __dirname + '/public/default.html')
+  console.log(req);
 })
 
 app.get( '/*' , function( req, res, next ) {

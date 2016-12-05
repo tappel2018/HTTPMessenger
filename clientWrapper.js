@@ -3,6 +3,9 @@ function clientWrapper (socket, name, uuid) {
   this.socket = socket;
   this.name = name;
   this.uuid = uuid;
+
+  //I'm gonna treat this as a false boolean and empty string
+  this.room = "";
   this.connectTime = new Date();
   console.log(clientWrapper.angle);
   this.color = HSVtoHex(360*clientWrapper.angle, 1.0, 0.7);
@@ -10,6 +13,10 @@ function clientWrapper (socket, name, uuid) {
   clientWrapper.angle %= 1;
 
   console.log(this.uuid);
+
+  this.on('roomUpdate', data) {
+    myself.socket.emit('roomUpdate', data);
+  }
 
   this.disconnect = function() {
     console.log("Player disconnected: " + myself.uuid);
@@ -27,8 +34,38 @@ function clientWrapper (socket, name, uuid) {
     return;
   }
 
+  this.joinRoom = function (data) {
+    //Find room of same id
+    var room = rooms.find(function (element) {
+      if (element.uuid == data.uuid) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    room.addClient(myself);
+    myself.room = room.uuid;
+  }
+
+  this.createRoom = function (data) {
+    var room = new Room();
+    room.addClient(myself);
+    myself.room = room.uuid;
+    rooms.push(uuid);
+  }
+
+  this.leaveRoom = function (data) {
+    myself.room.removeClient(myself);
+    myself.room = "";
+  }
+
   this.socket.on('disconnect', this.disconnect);
   this.socket.on('message', this.receiveMessage);
+  this.socket.on('joinRoom', this.joinRoom);
+  this.socket.on('createRoom', this.createRoom)
+  this.socket.on('leaveRoom' this.leaveRoom);
+
 
 
 }
