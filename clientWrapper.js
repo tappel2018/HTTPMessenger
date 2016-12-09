@@ -14,12 +14,10 @@ function clientWrapper (socket, name, uuid) {
 
   console.log(this.uuid);
 
-  this.on('roomUpdate', data) {
-    myself.socket.emit('roomUpdate', data);
-  }
 
   this.disconnect = function() {
     console.log("Player disconnected: " + myself.uuid);
+    myelf.leaveRoom();
     return;
   }
 
@@ -49,7 +47,7 @@ function clientWrapper (socket, name, uuid) {
   }
 
   this.createRoom = function (data) {
-    var room = new Room();
+    var room = new Room(data.name, data.size);
     room.addClient(myself);
     myself.room = room.uuid;
     rooms.push(uuid);

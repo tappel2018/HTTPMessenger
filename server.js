@@ -80,6 +80,8 @@ sio.sockets.on('connection', function(socket) {
 
     socket.emit("confirmed");
 
+    c.socket.emit("roomUpdate", {rooms: rooms});
+
     var client = new clientWrapper(socket, data.name, myUUID);
 
     console.log('New player connected: ' + client.uuid);
@@ -88,4 +90,10 @@ sio.sockets.on('connection', function(socket) {
   })
 
 
+})
+
+roomEmitter.on("roomUpdate", function() {
+  clients.forEach(function(c) {
+    c.socket.emit("roomUpdate", {rooms: rooms});
+  })
 })

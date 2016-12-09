@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+  margin:none;
+
+}
+.mainPane {
+  width:67%;
+  padding:1em;
+}
+
+.roomPane {
+  width:33%;
+  padding:1em;
+}

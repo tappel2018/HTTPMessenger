@@ -2,6 +2,11 @@ socket = io.connect('/')
 
 UUID = "";
 
+roomID = "";
+rooms = [];
+
+currentRoom = null;
+
 socket.on('onconnected', function ( data ) {
   console.log("Connection successful. UUID: " + data.id);
   UUID = data.id;
@@ -46,6 +51,22 @@ socket.on('messageFromServer', function ( data ) {
   pane.scrollTop = pane.scrollHeight;
 })
 
+socket.on('roomUpdate', function (data) {
+  var pane = document.getElementById("roomList");
+  pane.innerHTML = "";
+  rooms = data.rooms;
+  for (var i = 0; i < rooms.length; i++) {
+    var a = document.createElement("a");
+    a.setAttribute("onclick", "enterRoom(" + i + ")");
+    a.innerHTML = data.rooms[i].name + " -- " + data.rooms.clients.length "/" + data.rooms.size;
+    var toAppend = document.createElement("li").appendChild(a);
+    pane.appendChild(toAppend);
+  }
+
+});
+
+
+
 function sendMessage() {
   var toSend = document.getElementById("message").value;
   document.getElementById("message").value = "";
@@ -57,4 +78,14 @@ function sendName() {
 
   document.getElementById("name").value = "";
   socket.emit('name', {name: toSend});
+}
+
+function enterRoom(roomNumber) {
+  var toSend = rooms[roomNumber].uuid;
+  currentRoom = rooms[roomNumber];
+  socket.emit('joinRoom',{uuid: toSend});
+}
+
+function createRoom() {
+  socket.emit("createRoom", {name: document.getElementById("roomNameInput").value,size: document.getElementById("roomSizeInput").value})
 }

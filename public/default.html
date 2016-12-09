@@ -9,7 +9,19 @@
   </head>
   <body style="height:90vh;">
     <!-- <canvas id="myCanvas" style="border:1px solid black;width:100%;height:100%;"></canvas> -->
-
+    <div class="mainPane">
+      <div id="namelist">
+      </div>
+      <div id="gameDiv">
+      </div>
+    </div>
+    <div class="roomBar">
+      <ul id="roomList">
+      </ul>
+      <input id="roomNameInput">
+      <input id="roomSizeInput">
+      <button onclick="createRoom">Create Room</button>
+    </div>
     <div id="messageContainer" style="max-height:90%;overflow-y:auto;border: 1px solid black;padding:1em;">
       <p>Initializing messenger...</p>
     </div>
