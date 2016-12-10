@@ -7,26 +7,31 @@ function clientWrapper (socket, name, uuid) {
   //I'm gonna treat this as a false boolean and empty string
   this.room = "";
   this.connectTime = new Date();
-  console.log(clientWrapper.angle);
   this.color = HSVtoHex(360*clientWrapper.angle, 1.0, 0.7);
   clientWrapper.angle += 0.61803398875;
   clientWrapper.angle %= 1;
 
-  console.log(this.uuid);
-
-
   this.disconnect = function() {
     console.log("Player disconnected: " + myself.uuid);
-    myelf.leaveRoom();
+    myself.leaveRoom();
     return;
   }
 
   this.receiveMessage = function(data) {
-    console.log(myself.uuid);
+
     console.log("User: " + myself.uuid + " / Message: " + data.msg)
+
+    if (myself.room == "") {
+      myself.socket.emit("messageFromServer", {msg: "Invalid request: not in a room"});
+      return;
+    }
+
     if (data.msg != "") {
-      clients.forEach(function(c) {
-        c.socket.emit("messageFromServer", {msg: myself.name + ": " + data.msg, color: myself.color})
+
+
+
+      myself.room.clients.forEach(function(c) {
+        c.socket.emit("messageFromServer", {msg: myself.name + ": " + data.msg, color: myself.color});
       })
     }
     return;
@@ -34,6 +39,13 @@ function clientWrapper (socket, name, uuid) {
 
   this.joinRoom = function (data) {
     //Find room of same id
+    console.log("Player: " + myself.uuid + " joining room: " + data.uuid);
+
+
+    if (data.uuid == myself.room.uuid) {
+      return;
+    }
+
     var room = rooms.find(function (element) {
       if (element.uuid == data.uuid) {
         return true;
@@ -42,27 +54,46 @@ function clientWrapper (socket, name, uuid) {
       }
     });
 
+    if(myself.room != "") {
+      myself.room.removeClient(myself);
+      myself.room = "";
+    }
+
     room.addClient(myself);
-    myself.room = room.uuid;
+    myself.room = room;
+    Room.roomEmitter.emit("roomUpdate");
+    myself.socket.emit("roomEntered", {uuid: room.uuid});
   }
 
   this.createRoom = function (data) {
+    console.log("Creating room:" + data.name);
+    if(myself.room != "") {
+      myself.room.removeClient(myself);
+      myself.room = "";
+    }
     var room = new Room(data.name, data.size);
     room.addClient(myself);
-    myself.room = room.uuid;
-    rooms.push(uuid);
+    myself.room = room;
+    rooms.push(room);
+    Room.roomEmitter.emit("roomUpdate");
+    myself.socket.emit("roomEntered", {uuid: room.uuid});
+
   }
 
   this.leaveRoom = function (data) {
-    myself.room.removeClient(myself);
+    var room = myself.room;
     myself.room = "";
+    room.removeClient(myself);
+    Room.roomEmitter.emit("roomUpdate");
+    myself.socket.emit("roomLeft", {uuid: room.uuid});
+
   }
 
   this.socket.on('disconnect', this.disconnect);
   this.socket.on('message', this.receiveMessage);
   this.socket.on('joinRoom', this.joinRoom);
   this.socket.on('createRoom', this.createRoom)
-  this.socket.on('leaveRoom' this.leaveRoom);
+  this.socket.on('leaveRoom', this.leaveRoom);
 
 
 

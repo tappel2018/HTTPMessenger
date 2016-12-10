@@ -3,7 +3,7 @@ port        = process.env.PORT || 80,
 express         = require('express'),
 UUID            = require('uuid'),
 http            = require('http'),
-EventEmitter    = require('event'),
+EventEmitter    = require('events'),
 
 
 verbose         = false,
@@ -17,8 +17,10 @@ io = require('socket.io')( {
 })
 
 
-clientWrapper = require("./clientWrapper.js");
-Room = require("./room.js");
+clientWrapper   = require("./clientWrapper.js");
+Room            = require("./room.js");
+CondensedRoom   = require('./CondensedRoom.js');
+
 
 
 clients = [];
@@ -29,7 +31,6 @@ rooms = [];
 
 app.get('/', function (req, res) {
   res.sendFile( __dirname + '/public/default.html')
-  console.log(req);
 })
 
 app.get( '/*' , function( req, res, next ) {
@@ -54,7 +55,7 @@ io.use(function(socket, next) {
   var handshakeData = socket.request;
   // make sure the handshake data looks good as before
   // if error do this:
-  //   next(new Error('not authorized');
+  //   next(new Error('not authorized'));
   // else just call next
   next();
 });
@@ -80,20 +81,24 @@ sio.sockets.on('connection', function(socket) {
 
     socket.emit("confirmed");
 
-    c.socket.emit("roomUpdate", {rooms: rooms});
-
     var client = new clientWrapper(socket, data.name, myUUID);
 
     console.log('New player connected: ' + client.uuid);
 
     clients.push(client);
+
+    Room.roomEmitter.emit("roomUpdate");
   })
 
 
 })
 
-roomEmitter.on("roomUpdate", function() {
+Room.roomEmitter.on("roomUpdate", function() {
   clients.forEach(function(c) {
-    c.socket.emit("roomUpdate", {rooms: rooms});
+    var tempRooms = [];
+    for (var i = 0; i < rooms.length; i++) {
+      tempRooms.push(new CondensedRoom(rooms[i]));
+    }
+    c.socket.emit("roomUpdate", {rooms: tempRooms});
   })
 })

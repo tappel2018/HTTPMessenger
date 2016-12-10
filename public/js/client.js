@@ -1,3 +1,5 @@
+console.log("nice meme");
+
 socket = io.connect('/')
 
 UUID = "";
@@ -23,8 +25,8 @@ socket.on('confirmed', function (data) {
 
 
   document.getElementById("nameInput").style.display = "none";
-  document.getElementById("input").style.display = "block";
-  document.getElementById("message").focus();
+  document.getElementById("roomBar").style.display = "block";
+  document.getElementById("mainPane").style.display = "block";
 
 })
 
@@ -52,20 +54,32 @@ socket.on('messageFromServer', function ( data ) {
 })
 
 socket.on('roomUpdate', function (data) {
+  console.log(data);
   var pane = document.getElementById("roomList");
   pane.innerHTML = "";
   rooms = data.rooms;
   for (var i = 0; i < rooms.length; i++) {
     var a = document.createElement("a");
-    a.setAttribute("onclick", "enterRoom(" + i + ")");
-    a.innerHTML = data.rooms[i].name + " -- " + data.rooms.clients.length "/" + data.rooms.size;
-    var toAppend = document.createElement("li").appendChild(a);
+    a.setAttribute("href", "javascript:enterRoom(" + i + ")");
+    a.innerHTML = data.rooms[i].name + " -- " + data.rooms[i].clients.length + "/" + data.rooms[i].size;
+    var toAppend = document.createElement("li");
+    toAppend.appendChild(a);
     pane.appendChild(toAppend);
   }
 
 });
 
+socket.on('roomEntered', function (data) {
+  console.log(data);
+  this.currentRoom = rooms.find(function (element) {
+    if (element.uuid == data.uuid) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 
+})
 
 function sendMessage() {
   var toSend = document.getElementById("message").value;
@@ -82,10 +96,11 @@ function sendName() {
 
 function enterRoom(roomNumber) {
   var toSend = rooms[roomNumber].uuid;
-  currentRoom = rooms[roomNumber];
   socket.emit('joinRoom',{uuid: toSend});
 }
 
 function createRoom() {
   socket.emit("createRoom", {name: document.getElementById("roomNameInput").value,size: document.getElementById("roomSizeInput").value})
+  document.getElementById("roomNameInput").value = "";
+  document.getElementById("roomSizeInput").value = ""
 }
