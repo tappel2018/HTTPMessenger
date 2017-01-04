@@ -31,7 +31,7 @@ function clientWrapper (socket, name, uuid) {
 
 
       myself.room.clients.forEach(function(c) {
-        c.socket.emit("messageFromServer", {msg: myself.name + ": " + data.msg, color: myself.color});
+        c.socket.emit("gameMessage", {msg: myself.name + ": " + data.msg, color: myself.color});
       })
     }
     return;
@@ -46,6 +46,12 @@ function clientWrapper (socket, name, uuid) {
       return;
     }
 
+    try {
+      myself.leaveRoom();
+    } catch (e){
+      console.log(e);
+    }
+
     var room = rooms.find(function (element) {
       if (element.uuid == data.uuid) {
         return true;
@@ -54,23 +60,26 @@ function clientWrapper (socket, name, uuid) {
       }
     });
 
-    if(myself.room != "") {
-      myself.room.removeClient(myself);
-      myself.room = "";
+    if (room === undefined ){
+      return;
     }
 
-    room.addClient(myself);
     myself.room = room;
+    room.addClient(myself);
+
     Room.roomEmitter.emit("roomUpdate");
     myself.socket.emit("roomEntered", {uuid: room.uuid});
   }
 
   this.createRoom = function (data) {
     console.log("Creating room:" + data.name);
-    if(myself.room != "") {
-      myself.room.removeClient(myself);
-      myself.room = "";
+
+    try {
+      myself.leaveRoom();
+    } catch (e) {
+      console.log(e);
     }
+
     var room = new Room(data.name, data.size);
     room.addClient(myself);
     myself.room = room;
@@ -80,12 +89,20 @@ function clientWrapper (socket, name, uuid) {
 
   }
 
-  this.leaveRoom = function (data) {
-    var room = myself.room;
+  this.leaveRoom = function () {
+
+    console.log("Player: " + myself.uuid + " leaving room: " + myself.room.uuid);
+
+    try {
+      myself.room.removeClient(myself);
+    } catch (e) {
+      console.log(e);
+    }
+
     myself.room = "";
-    room.removeClient(myself);
+
     Room.roomEmitter.emit("roomUpdate");
-    myself.socket.emit("roomLeft", {uuid: room.uuid});
+    myself.socket.emit("roomLeft", {uuid: myself.room.uuid});
 
   }
 

@@ -1,14 +1,59 @@
 * {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
-  margin:none;
-
 }
-.mainPane {
-  width:67%;
-  padding:1em;
+body, html {
+  margin: 0px;
+  padding:0px;
+  height:100%;
 }
 
-.roomPane {
-  width:33%;
+.container {
+  margin: 0px;
+  padding:0px;
+  position:relative;
+  display: flex;
+}
+
+.filler {
+  margin-top: auto;
+  margi
+}
+
+
+#mainPane {
   padding:1em;
+  margin: 0px;
+  border: 1px solid black;
+
+  -webkit-flex: 9;  /* Safari 6.1+ */
+  -ms-flex: 9;  /* IE 10 */
+  flex: 9;
+}
+
+#roomPane {
+  padding:1em;
+  margin: 0px;
+  border: 1px solid black;
+  float: left;
+
+
+  -webkit-flex: 3;  /* Safari 6.1+ */
+  -ms-flex: 3;  /* IE 10 */
+  flex: 3;
+}
+
+#gameDiv {
+  margin-top: auto;
+}
+
+#roomBar {
+  border: 1px solid black;
+}
+
+#serverContainer {
+  margin-top:2em;
+  padding: 1em;
+  border: 1px solid black;
 }

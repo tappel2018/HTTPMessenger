@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Messenger</title>
+    <link rel="stylesheet" type="text/css" href="main.css">
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script type="text/javascript"src="js/client.js"></script>
     <!-- <script src="js/paperjs-v0.10.2/dist/paper-full.min.js" type="text/javascript"> </script> -->
@@ -13,25 +14,37 @@
       Name: <input type="text" id="name" autocomplete="off" autofocus="true">
       <button onclick="sendName()">Connect</button>
     </div>
-    <div id="mainPane" style="display:none;">
-      <div id="namelist">
+    <div class="container">
+      <div id="mainPane" style="display:none;">
+        <div class= "filler">
+        </div>
+        <div id="namelist">
+        </div>
+        <div id="gameDiv">
+          <div id="messageContainer" style="max-height:90%;overflow-y:auto;border: 1px solid black;padding:1em;">
+          </div>
+          <div id="input" style="max-height:5%;margin-top:1em;" onsubmit="return false;" target="#">
+            <input type="text" id="message" autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+          </div>
+        </div>
       </div>
-      <div id="gameDiv">
-        <div id="messageContainer" style="max-height:90%;overflow-y:auto;border: 1px solid black;padding:1em;">
-          <p>Initializing messenger...</p>
-        </div>
-        <div id="input" style="max-height:5%;margin-top:1em;" onsubmit="return false;" target="#">
-          <input type="text" id="message" autocomplete="off">
-          <button onclick="sendMessage()">Send</button>
-        </div>
+
+      <div id="roomPane" style="display:none;">
+        <ul id="roomList">
+        </ul>
+        Room name:
+        <input id="roomNameInput">
+        <br/>
+        Room size:
+        <input id="roomSizeInput">
+        <br/>
+        <button onclick="createRoom()">Create Room</button>
       </div>
     </div>
-    <div id="roomBar" style="display:none;">
-      <ul id="roomList">
-      </ul>
-      <input id="roomNameInput">
-      <input id="roomSizeInput">
-      <button onclick="createRoom()">Create Room</button>
+
+    <div id="serverContainer">
+      <p>Initializing messenger...</p>
     </div>
   </body>
 </html>
