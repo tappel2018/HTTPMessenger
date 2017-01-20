@@ -1,4 +1,3 @@
-console.log("nice meme");
 
 socket = io.connect('/')
 
@@ -6,6 +5,8 @@ UUID = "";
 
 roomID = "";
 rooms = [];
+
+totalGameData = {};
 
 currentRoom = null;
 
@@ -42,7 +43,7 @@ socket.on('disconnect', function ( data ) {
 
 })
 
-socket.on('gameMessage', function (data) {
+socket.on('message', function (data) {
   var toAppend = document.createElement("P");
   toAppend.appendChild(document.createTextNode(data.msg));
   toAppend.style.color = data.color;
@@ -57,7 +58,6 @@ socket.on('messageFromServer', function ( data ) {
   var toAppend = document.createElement("P");
   toAppend.appendChild(document.createTextNode(data.msg));
   toAppend.style.color = data.color;
-  console.log(data.color);
 
   var pane = document.getElementById("serverContainer");
   pane.appendChild(toAppend);
@@ -65,7 +65,6 @@ socket.on('messageFromServer', function ( data ) {
 })
 
 socket.on('roomUpdate', function (data) {
-  console.log(data);
   var pane = document.getElementById("roomList");
   pane.innerHTML = "";
   rooms = data.rooms;
@@ -81,7 +80,6 @@ socket.on('roomUpdate', function (data) {
 });
 
 socket.on('roomEntered', function (data) {
-  console.log(data);
 
   this.currentRoom = rooms.find(function (element) {
     if (element.uuid == data.uuid) {
@@ -91,6 +89,16 @@ socket.on('roomEntered', function (data) {
     }
   });
 
+  document.getElementById("roomHeader").innerHTML = "Room: " + this.currentRoom.name;
+
+  this.currentRoom.clients.forEach(function(client) {
+    var nameToAppend = document.createElement("li");
+    nameToAppend.appendChild(document.createTextNode(client));
+    document.getElementById("nameList").appendChild(nameToAppend);
+
+  });
+
+
   var toAppend = document.createElement("P");
   toAppend.appendChild(document.createTextNode("You have entered room: " + this.currentRoom.name ));
   document.getElementById("serverContainer").appendChild(toAppend);
@@ -98,11 +106,37 @@ socket.on('roomEntered', function (data) {
 })
 
 socket.on('roomLeft', function (data) {
-  var toAppend = document.createElement("P");
-  toAppend.appendChild(document.createTextNode("You have left room: " + this.currentRoom.name));
-  document.getElementById("serverContainer").appendChild(toAppend);
+
+  document.getElementById("roomHeader").innerHTML = "Room: none";
+  document.getElementById("nameList").innerHTML = "";
+
+  if (this.currentRoom != null) {
+    var toAppend = document.createElement("P");
+    toAppend.appendChild(document.createTextNode("You have left room: " + this.currentRoom.name));
+    document.getElementById("serverContainer").appendChild(toAppend);
+  }
 
   this.currentRoom = null;
+});
+
+socket.on('gameData', function (data) {
+  console.log(data);
+  totalGameData = data.gameData;
+
+  var g2d = document.getElementById("gameCanvas").getContext("2d");
+
+  g2d.fillStyle="white";
+  g2d.fillRect(0,0,500,500);
+
+  //key is player name
+  g2d.fillStyle="black";
+  for (var key in totalGameData) {
+    if (totalGameData.hasOwnProperty(key)) {
+      var playerData = totalGameData[key];
+      g2d.fillRect(playerData.x - 25, playerData.y -25, 50, 50);
+    }
+  }
+
 });
 
 function sendMessage() {
@@ -131,4 +165,12 @@ function createRoom() {
 
 function leaveRoom() {
   this.socket.emit("leaveRoom");
+}
+
+var keyMap = {}; // You could also use an array
+onkeydown = onkeyup = function(e){
+    e = e || event; // to deal with IE
+    keyMap[e.keyCode] = e.type == 'keydown';
+    this.socket.emit("gameData", keyMap);
+    /* insert conditional here */
 }

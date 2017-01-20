@@ -11,6 +11,8 @@ function clientWrapper (socket, name, uuid) {
   clientWrapper.angle += 0.61803398875;
   clientWrapper.angle %= 1;
 
+  this.keyMap = {};
+
   this.disconnect = function() {
     console.log("Player disconnected: " + myself.uuid);
     myself.leaveRoom();
@@ -27,14 +29,19 @@ function clientWrapper (socket, name, uuid) {
     }
 
     if (data.msg != "") {
-
-
-
-      myself.room.clients.forEach(function(c) {
-        c.socket.emit("gameMessage", {msg: myself.name + ": " + data.msg, color: myself.color});
-      })
+      myself.room.message(myself, data);
     }
+
     return;
+  }
+
+  this.receiveGameData = function(keyMap) {
+    if (myself.room == "") {
+      myself.socket.emit("messageFromServer", {msg: "Invalid request: not in a room"});
+      return;
+    }
+
+    myself.keyMap = keyMap;
   }
 
   this.joinRoom = function (data) {
@@ -43,14 +50,11 @@ function clientWrapper (socket, name, uuid) {
 
 
     if (data.uuid == myself.room.uuid) {
+      myself.socket.emit("messageFromServer", {msg: "You are already in room: " + myself.room.name });
       return;
     }
 
-    try {
-      myself.leaveRoom();
-    } catch (e){
-      console.log(e);
-    }
+
 
     var room = rooms.find(function (element) {
       if (element.uuid == data.uuid) {
@@ -60,8 +64,20 @@ function clientWrapper (socket, name, uuid) {
       }
     });
 
-    if (room === undefined ){
+    if (room.size == room.clients.length) {
+      myself.socket.emit("messageFromServer", {msg: room.name + " is full."});
       return;
+    }
+
+    if (typeof room === undefined ){
+      myself.socket.emit("messageFromServer", {msg: "The room that you tried to request does not exist."});
+      return;
+    }
+
+    try {
+      myself.leaveRoom();
+    } catch (e){
+      console.log(e);
     }
 
     myself.room = room;
@@ -72,6 +88,12 @@ function clientWrapper (socket, name, uuid) {
   }
 
   this.createRoom = function (data) {
+
+    if (isNaN(data.size) || data.size<1) {
+      myself.socket.emit("messageFromServer", {msg: "Please enter a valid room size."});
+      return;
+    }
+
     console.log("Creating room:" + data.name);
 
     try {
@@ -111,7 +133,7 @@ function clientWrapper (socket, name, uuid) {
   this.socket.on('joinRoom', this.joinRoom);
   this.socket.on('createRoom', this.createRoom)
   this.socket.on('leaveRoom', this.leaveRoom);
-
+  this.socket.on('gameData', this.receiveGameData);
 
 
 }

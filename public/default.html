@@ -18,16 +18,21 @@
       <div id="mainPane" style="display:none;">
         <div class= "filler">
         </div>
-        <div id="namelist">
-        </div>
+        <h1 id="roomHeader">Room: None</h1>
         <div id="gameDiv">
-          <div id="messageContainer" style="max-height:90%;overflow-y:auto;border: 1px solid black;padding:1em;">
+          <div id = "gameContainer">
+            <canvas width=500, height=500 id="gameCanvas" style="border: 1px solid black;" onkeydown="onkeydown" onkeyup="onkeyup" tabindex="0">
+            </canvas>
+          </div>
+          <div id="messageContainer" style="max-height:90%;overflow-y:scroll;border: 1px solid black;padding:1em;">
           </div>
           <div id="input" style="max-height:5%;margin-top:1em;" onsubmit="return false;" target="#">
             <input type="text" id="message" autocomplete="off">
             <button onclick="sendMessage()">Send</button>
           </div>
         </div>
+        <ul id="nameList">
+        </ul>
       </div>
 
       <div id="roomPane" style="display:none;">
@@ -43,7 +48,7 @@
       </div>
     </div>
 
-    <div id="serverContainer">
+    <div id="serverContainer" style="max-height:5%">
       <p>Initializing messenger...</p>
     </div>
   </body>
