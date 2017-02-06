@@ -1,4 +1,7 @@
 UUID = require ("uuid");
+CondensedClient = require("./condensedClient");
+CondensedRoom = require("./condensedRoom");
+
 
 function Room(name, size) {
   var myself = this;
@@ -148,13 +151,10 @@ function Room(name, size) {
     if (this.islocked)
       setTimeout(function() {myself.update()}, 5);
 
-    var totalGameData = {};
-    for (var i = 0; i <myself.clients.length; i++) {
-      totalGameData[myself.clients[i].name] =myself.clients[i].gameData;
-    }
+
 
     for (var i = 0; i <myself.clients.length; i++) {
-     myself.clients[i].socket.emit("gameData", {gameData: totalGameData});
+     myself.clients[i].socket.emit("gameData", {roomData: new CondensedRoom(myself, true)});
     }
     setTimeout(function() {myself.sendData()}, 30);
   }

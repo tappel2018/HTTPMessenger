@@ -1,6 +1,3 @@
-UUID = require ("uuid");
-CondensedClient = require("./condensedClient");
-
 /*This is required so that you don't send over
 a room that contains a client
 that contains the room that contains the client
@@ -25,5 +22,3 @@ function CondensedRoom(room, gameData) {
   }
 
 }
-
-module.exports = CondensedRoom;

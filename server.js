@@ -97,7 +97,7 @@ Room.roomEmitter.on("roomUpdate", function() {
   clients.forEach(function(c) {
     var tempRooms = [];
     for (var i = 0; i < rooms.length; i++) {
-      tempRooms.push(new CondensedRoom(rooms[i]));
+      tempRooms.push(new CondensedRoom(rooms[i], false));
     }
     c.socket.emit("roomUpdate", {rooms: tempRooms});
   })
