@@ -6,9 +6,12 @@ UUID = "";
 roomID = "";
 rooms = [];
 
-totalGameData = {};
+clientGameData = null;
+serverGameData = null;
 
 currentRoom = null;
+
+var interrupt = false;
 
 socket.on('onconnected', function ( data ) {
   console.log("Connection successful. UUID: " + data.id);
@@ -77,6 +80,16 @@ socket.on('roomUpdate', function (data) {
     pane.appendChild(toAppend);
   }
 
+  if (this.currentRoom != null) {
+    this.currentRoom.clients.forEach(function(client) {
+      var nameToAppend = document.createElement("li");
+      nameToAppend.appendChild(document.createTextNode(client));
+      document.getElementById("nameList").appendChild(nameToAppend);
+
+    });
+  }
+
+
 });
 
 socket.on('roomEntered', function (data) {
@@ -93,7 +106,7 @@ socket.on('roomEntered', function (data) {
 
   this.currentRoom.clients.forEach(function(client) {
     var nameToAppend = document.createElement("li");
-    nameToAppend.appendChild(document.createTextNode(client));
+    nameToAppend.appendChild(document.createTextNode(client.name));
     document.getElementById("nameList").appendChild(nameToAppend);
 
   });
@@ -102,6 +115,10 @@ socket.on('roomEntered', function (data) {
   var toAppend = document.createElement("P");
   toAppend.appendChild(document.createTextNode("You have entered room: " + this.currentRoom.name ));
   document.getElementById("serverContainer").appendChild(toAppend);
+
+  interrupt = false;
+  initPhysics();
+  loop();
 
 })
 
@@ -117,25 +134,8 @@ socket.on('roomLeft', function (data) {
   }
 
   this.currentRoom = null;
-});
 
-socket.on('gameData', function (data) {
-  console.log(data);
-  totalGameData = data.gameData;
-
-  var g2d = document.getElementById("gameCanvas").getContext("2d");
-
-  g2d.fillStyle="white";
-  g2d.fillRect(0,0,500,500);
-
-  //key is player name
-  g2d.fillStyle="black";
-  for (var key in totalGameData) {
-    if (totalGameData.hasOwnProperty(key)) {
-      var playerData = totalGameData[key];
-      g2d.fillRect(playerData.x - 25, playerData.y -25, 50, 50);
-    }
-  }
+  interrupt = true;
 
 });
 
@@ -160,7 +160,7 @@ function enterRoom(roomNumber) {
 function createRoom() {
   socket.emit("createRoom", {name: document.getElementById("roomNameInput").value,size: document.getElementById("roomSizeInput").value})
   document.getElementById("roomNameInput").value = "";
-  document.getElementById("roomSizeInput").value = ""
+  document.getElementById("roomSizeInput").value = "";
 }
 
 function leaveRoom() {
@@ -173,4 +173,33 @@ onkeydown = onkeyup = function(e){
     keyMap[e.keyCode] = e.type == 'keydown';
     this.socket.emit("gameData", keyMap);
     /* insert conditional here */
+}
+
+var prevTime;
+
+socket.on('gameData', function (data) {
+
+  serverGameData = JSON.parse(data.roomData);
+
+});
+
+function initPhysics () {
+  prevTime = (new Date()).getTime();
+}
+
+function loop() {
+  if (interrupt) {
+    return;
+  }
+
+  var dt = (new Date()).getTime() - this.prevTime;
+  this.prevTime = new Date();
+
+  clientGameData = Physics.makeCorrections(clientGameData,serverGameData, dt);
+  clientGameData = Physics.calculatePhysics(clientGameData,dt);
+
+  draw(clientGameData);
+
+  setTimeout(loop, 25);
+
 }

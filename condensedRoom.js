@@ -21,7 +21,7 @@ function CondensedRoom(room, gameData) {
   this.clients = [];
 
   for (var i = 0; i < room.clients.length; i++) {
-    this.clients.push(new CondensedClient[room.clients[i], gameData]);
+    this.clients.push(new CondensedClient(room.clients[i], gameData));
   }
 
 }
