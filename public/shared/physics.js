@@ -1,9 +1,8 @@
 (function(exports){
 
-    // your code goes here
-
     var acceleration = 0.001;
 
+    //returns changed room
     exports.calculatePhysics = function(condensedRoom, dt){
 
       var newCondensedRoom = new CondensedRoom(condensedRoom, true);
@@ -21,7 +20,6 @@
         } else if (curClient.keyMap[68]) {
           curClient.gameData.vx += acceleration *dt;
         }
-
 
 
         if (curClient.gameData.vx > 0.1)
@@ -60,9 +58,20 @@
 
     };
 
+    //returns changed room
     exports.makeCorrections = function(condensedRoomClient, condensedRoomActual, dt){
       //TODO: make corrections
       return new CondensedRoom(condensedRoomActual, true);
+
+    };
+
+    //changes client
+    exports.initClient = function(client) {
+      client.gameData = {};
+      client.gameData.x = 50;
+      client.gameData.y = 50;
+      client.gameData.vx = 0;
+      client.gameData.vy = 0;
 
     };
 

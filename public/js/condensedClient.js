@@ -12,8 +12,6 @@ that contains the room that contains the client
 
 //Send TRUE to gameData if you would also like to send game data
 function CondensedClient(client, gameData) {
-
-  this.socket = client.socket;
   this.name = client.name;
 
   this.color = client.color;
@@ -26,5 +24,5 @@ function CondensedClient(client, gameData) {
   if (client.gameData != null && gameData) {
     this.gameData = client.gameData;
   }
-  
+
 }

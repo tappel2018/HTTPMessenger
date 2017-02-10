@@ -28,11 +28,9 @@ function Room(name, size) {
         return;
       }
     }
-    client.gameData = {};
-    client.gameData.x = 50;
-    client.gameData.y = 50;
-    client.gameData.vx = 0;
-    client.gameData.vy = 0;
+
+    Physics.initClient(client);
+
     this.clients.push(client);
 
     console.log(myself.clients);
@@ -95,29 +93,6 @@ function Room(name, size) {
 
     if (this.islocked)
       setTimeout(function() {myself.update()}, 5);
-
-
-    console.log(new CondensedRoom(myself, true));
-
-    var seenObjects = [];
-
-    function detect (obj) {
-      if (obj && typeof obj === 'object') {
-        if (seenObjects.indexOf(obj) !== -1) {
-          return true;
-        }
-        seenObjects.push(obj);
-        for (var key in obj) {
-          if (obj.hasOwnProperty(key) && detect(obj[key])) {
-            console.log(obj, 'cycle at ' + key);
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    console.log( detect(new CondensedRoom(myself, true).clients[0]));
 
     for (var i = 0; i <myself.clients.length; i++) {
      myself.clients[i].socket.emit("gameData", {roomData: JSON.stringify(new CondensedRoom(myself, true))});
