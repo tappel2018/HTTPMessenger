@@ -21,7 +21,7 @@ clientWrapper   = require("./clientWrapper.js");
 Room            = require("./room.js");
 CondensedRoom   = require('./CondensedRoom.js');
 
-
+isClient = false;
 
 clients = [];
 rooms = [];

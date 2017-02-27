@@ -29,7 +29,7 @@ function Room(name, size) {
       }
     }
 
-    Physics.initClient(client);
+    Physics.initClient(client)
 
     this.clients.push(client);
 
@@ -95,7 +95,7 @@ function Room(name, size) {
       setTimeout(function() {myself.update()}, 5);
 
     for (var i = 0; i <myself.clients.length; i++) {
-     myself.clients[i].socket.emit("gameData", {roomData: JSON.stringify(new CondensedRoom(myself, true))});
+     myself.clients[i].socket.emit("gameData", {roomData: new CondensedRoom(myself, true)});
     }
     setTimeout(function() {myself.sendData()}, 30);
   }

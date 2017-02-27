@@ -11,6 +11,10 @@ serverGameData = null;
 
 currentRoom = null;
 
+name = null;
+
+isClient = true;
+
 var interrupt = false;
 
 socket.on('onconnected', function ( data ) {
@@ -150,6 +154,8 @@ function sendName() {
 
   document.getElementById("name").value = "";
   socket.emit('name', {name: toSend});
+
+  name = toSend;
 }
 
 function enterRoom(roomNumber) {
@@ -179,7 +185,7 @@ var prevTime;
 
 socket.on('gameData', function (data) {
 
-  serverGameData = JSON.parse(data.roomData);
+  serverGameData = data.roomData;
 
 });
 
@@ -195,10 +201,14 @@ function loop() {
   var dt = (new Date()).getTime() - this.prevTime;
   this.prevTime = new Date();
 
-  clientGameData = Physics.makeCorrections(clientGameData,serverGameData, dt);
-  clientGameData = Physics.calculatePhysics(clientGameData,dt);
+  try {
+    clientGameData = Physics.makeCorrections(clientGameData,serverGameData, dt);
+    clientGameData = Physics.calculatePhysics(clientGameData,dt);
 
-  draw(clientGameData);
+    draw(clientGameData, name);
+  } catch(e) {
+    console.log(e);
+  }
 
   setTimeout(loop, 25);
 
