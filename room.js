@@ -85,7 +85,7 @@ function Room(name, size) {
       setTimeout(function() {myself.update()}, 5);
     var dt = (new Date()).getTime() - this.prevTime;
     this.prevTime = new Date();
-    this.condensedRoom = Physics.calculatePhysics(myself, dt);
+    var condensedRoom = Physics.calculatePhysics(myself, dt, "", myself);
     setTimeout(function() {myself.update()}, 15);
   }
 
@@ -97,7 +97,7 @@ function Room(name, size) {
     for (var i = 0; i <myself.clients.length; i++) {
      myself.clients[i].socket.emit("gameData", {roomData: new CondensedRoom(myself, true)});
     }
-    setTimeout(function() {myself.sendData()}, 30);
+    setTimeout(function() {myself.sendData()}, 20);
   }
 
 

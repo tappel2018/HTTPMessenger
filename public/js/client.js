@@ -17,6 +17,13 @@ isClient = true;
 
 var interrupt = false;
 
+window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+}, false);
+
 socket.on('onconnected', function ( data ) {
   console.log("Connection successful. UUID: " + data.id);
   UUID = data.id;
@@ -122,6 +129,7 @@ socket.on('roomEntered', function (data) {
 
   interrupt = false;
   initPhysics();
+  initDraw();
   loop();
 
 })
@@ -140,6 +148,8 @@ socket.on('roomLeft', function (data) {
   this.currentRoom = null;
 
   interrupt = true;
+
+  clearCanvas();
 
 });
 
@@ -189,8 +199,29 @@ socket.on('gameData', function (data) {
 
 });
 
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame       ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame    ||
+          window.oRequestAnimationFrame      ||
+          window.msRequestAnimationFrame     ||
+          function(/* function */ callback, /* DOMElement */ element){
+            window.setTimeout(callback, 1000 / 60);
+          };
+})();
+
+function drawFrame() {
+  try {
+    draw(clientGameData, name);
+  } catch (e) {
+    console.log(e);
+  }
+  // requestAnimFrame(drawFrame);
+}
+
 function initPhysics () {
   prevTime = (new Date()).getTime();
+  drawFrame();
 }
 
 function loop() {
@@ -203,13 +234,14 @@ function loop() {
 
   try {
     clientGameData = Physics.makeCorrections(clientGameData,serverGameData, dt);
-    clientGameData = Physics.calculatePhysics(clientGameData,dt);
+    clientGameData = Physics.calculatePhysics(clientGameData,dt,name);
 
-    draw(clientGameData, name);
   } catch(e) {
     console.log(e);
   }
 
-  setTimeout(loop, 25);
+  drawFrame();
+
+  setTimeout(loop, 10);
 
 }
