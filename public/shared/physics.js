@@ -8,12 +8,16 @@ try {
 
 (function(exports){
 
-    var acceleration = 0.0001;
-    var boostAcceleration = 0.00015;
-    var drag = 0.00001
+    var acceleration = 0.0003;
+    var drag = 0.00005;
     var returnAcceleration = 0.00015;
-    var borderAcceleration = 0.0002;
+    var borderAcceleration = 0.0011;
     var maxSpeed = 0.15;
+
+    var boostAcceleration = 0.001;
+    var boostReturnAcceleration = 0.00025;
+    var boostMaxSpeed = 0.3;
+    var boostDrain = 6.5;
 
     var maxHealth = 100;
     var drainRate = 1;
@@ -24,7 +28,7 @@ try {
 
     var turnSpeed = 0.005;
 
-    var worldSize = 500;
+    var worldSize = 2000;
 
     var bulletSpeed = 0.4;
 
@@ -49,7 +53,7 @@ try {
           }
 
         } catch(e) {
-
+          console.log(e);
         }
       }
 
@@ -82,6 +86,8 @@ try {
       client.gameData.health = maxHealth;
       client.gameData.bulletTimeOut = bulletTimeOut;
       client.gameData.curTimeOut = 0;
+      client.gameData.isBoosting = false;
+      client.gameData.points = 0;
       client.gameData.ship = {
           x: Math.random() * worldSize,
           y: Math.random() * worldSize,
@@ -134,16 +140,9 @@ try {
       ship.x += ship.vx * dt;
       ship.y += ship.vy * dt;
 
-
-
-      if (ship.vx * ship.vx + ship.vy * ship.vy > maxSpeed * maxSpeed)
-        exports.accelerateShip(ship,
-          -returnAcceleration * dt * Math.sign(ship.vx) * Math.abs(Math.cos(ship.angle)),
-          -returnAcceleration * dt * Math.sign (ship.vy) * Math.abs(Math.sin(ship.angle)));
-
-        exports.accelerateShip(ship,
-          -drag * dt * Math.sign(ship.vx) * Math.abs(Math.cos(ship.angle)),
-          -drag * dt * Math.sign (ship.vy) * Math.abs(Math.sin(ship.angle)));
+      exports.accelerateShip(ship,
+        -drag * dt * Math.sign(ship.vx) * Math.abs(Math.cos(ship.angle)),
+        -drag * dt * Math.sign (ship.vy) * Math.abs(Math.sin(ship.angle)));
 
 
     };
@@ -166,11 +165,26 @@ try {
       for (var i = 0; i <newCondensedRoom.clients.length; i++) {
         var curClient =newCondensedRoom.clients[i];
         exports.updatePolygons(curClient.gameData.ship);
-        if (curClient.keyMap[38]) {
-          exports.accelerateShip(curClient.gameData.ship,acceleration * dt);
+
+        if (curClient.keyMap[88]) {
+          curClient.gameData.isBoosting = true;
+        } else {
+          curClient.gameData.isBoosting = false;
         }
-        if (curClient.keyMap[40]) {
-          exports.accelerateShip(curClient.gameData.ship,-acceleration * dt);
+
+        if (!curClient.gameData.isBoosting) {
+
+          if (curClient.keyMap[38]) {
+            exports.accelerateShip(curClient.gameData.ship,acceleration * dt);
+          }
+          if (curClient.keyMap[40]) {
+            exports.accelerateShip(curClient.gameData.ship,-acceleration * dt);
+          }
+
+        } else {
+          curClient.gameData.health -= boostDrain * dt / 1000;
+
+          exports.accelerateShip(curClient.gameData.ship, boostAcceleration * dt);
         }
 
         if (curClient.keyMap[37]) {
@@ -181,21 +195,29 @@ try {
           exports.rotateShip(curClient.gameData.ship, turnSpeed * dt );
         }
 
-        if (curClient.gameData.ship.x < 0) {
+        if (curClient.gameData.ship.x < 0 ) {
           exports.accelerateShip(curClient.gameData.ship, borderAcceleration * dt, 0);
         }
 
-        if (curClient.gameData.ship.x > worldSize) {
+        if (curClient.gameData.ship.x > worldSize ) {
           exports.accelerateShip(curClient.gameData.ship, -borderAcceleration* dt, 0);
         }
 
-        if (curClient.gameData.ship.y < 0) {
+        if (curClient.gameData.ship.y < 0 ) {
           exports.accelerateShip(curClient.gameData.ship, 0, borderAcceleration* dt);
         }
 
-        if (curClient.gameData.ship.y > worldSize) {
+        if (curClient.gameData.ship.y > worldSize ) {
           exports.accelerateShip(curClient.gameData.ship, 0, -borderAcceleration* dt);
         }
+
+
+        if (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy > maxSpeed * maxSpeed)
+          exports.accelerateShip(curClient.gameData.ship,
+            -boostReturnAcceleration * dt * Math.sign(curClient.gameData.ship.vx) * Math.abs(Math.cos(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
+            * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy) / (maxSpeed * maxSpeed),
+            -boostReturnAcceleration * dt * Math.sign (curClient.gameData.ship.vy) * Math.abs(Math.sin(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
+            * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy ) / (maxSpeed * maxSpeed));
 
         exports.updateShip(curClient.gameData.ship,dt);
 
@@ -216,14 +238,15 @@ try {
           }
           exports.updateBullet(curBullet, dt);
 
-          var point = new SAT.Vector(curBullet.x, curBullet.y);
+          var circle = new SAT.Circle(SAT.Vector(curBullet.x, curBullet.y), 5);
           for (var k = 0; k < newCondensedRoom.clients.length; k++) {
+            if (i == k) continue;
             var otherClient = newCondensedRoom.clients[k];
-
-            if (SAT.pointInPolygon(point, otherClient.gameData.ship.polygon1)
-            ||  SAT.pointInPolygon(point, otherClient.gameData.ship.polygon2)) {
+            if (SAT.testPolygonCircle(otherClient.gameData.ship.polygon1, circle)
+            ||  SAT.testPolygonCircle(otherClient.gameData.ship.polygon2, circle) ) {
               otherClient.gameData.health -= curBullet.damage;
               curClient.gameData.bullets.splice(j, 1);
+              curClient.gameData.points += curBullet.damage;
             }
           }
 
@@ -243,14 +266,11 @@ try {
           }
         }
         curClient.gameData.health += healRate * dt / 1000;
-
       }
 
       return newCondensedRoom;
 
     };
-
-
 
   exports.Bullet = function(client) {
     this.x = client.gameData.ship.x + 31 * Math.cos(client.gameData.ship.angle);
@@ -266,7 +286,7 @@ try {
   exports.updateBullet = function(bullet, dt) {
     bullet.x += bullet.vx * dt;
     bullet.y += bullet.vy * dt;
-  }
+  };
 
 
 })(typeof exports === 'undefined'? this['Physics']={}: exports);

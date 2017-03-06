@@ -1,7 +1,7 @@
 stars = [];
 function initDraw(condensedRoom) {
-  for (var i = 0; i < 100; i++) {
-    stars.push({x:Math.random() * 750, y:Math.random()*500});
+  for (var i = 0; i < 200; i++) {
+    stars.push({x:Math.random() * 2000, y:Math.random()*2000});
   }
 }
 
@@ -9,7 +9,7 @@ function draw(condensedRoom, name) {
   var g2d = document.getElementById("gameCanvas").getContext("2d");
 
   g2d.fillStyle="black";
-  g2d.fillRect(0,0,750,500);
+  g2d.fillRect(0,0,1250,600);
 
   g2d.fillStyle="white";
 
@@ -19,16 +19,19 @@ function draw(condensedRoom, name) {
   var healthColor = "white";
   var health = 0;
 
+  var pointsAndColors = [];
+
   condensedRoom.clients.forEach(function(client) {
     if (client.name == name) {
-      tempx = - Math.floor(client.gameData.ship.x) + 375;
-      tempy = - Math.floor(client.gameData.ship.y) + 250;
+      tempx = - Math.floor(client.gameData.ship.x) + 625;
+      tempy = - Math.floor(client.gameData.ship.y) + 300;
       healthColor = client.color;
       health = client.gameData.health;
-      g2d.translate(tempx, tempy);
     }
+    pointsAndColors.push({points: client.gameData.points, color: client.color});
   })
 
+  g2d.translate(tempx, tempy);
 
 
   for (var i = 0; i <stars.length; i++) {
@@ -36,7 +39,17 @@ function draw(condensedRoom, name) {
   }
 
   for (var i = 0; i < condensedRoom.clients.length; i++) {
-    g2d.fillStyle = condensedRoom.clients[i].color;
+    if (condensedRoom.clients[i].gameData.isBoosting) {
+      var RGB = HextoRGB(condensedRoom.clients[i].color);
+      var HSV = RGBtoHSV(RGB.r, RGB.g, RGB.b);
+      HSV.v += 0.1;
+      g2d.fillStyle = HSVtoHex(HSV.h, HSV.s, HSV.v);
+    } else {
+      g2d.fillStyle = condensedRoom.clients[i].color;
+
+    }
+
+
     var playerData = condensedRoom.clients[i].gameData;
     g2d.translate(Math.floor(playerData.ship.x), Math.floor(playerData.ship.y));
     g2d.rotate(playerData.ship.angle);
@@ -50,6 +63,8 @@ function draw(condensedRoom, name) {
     g2d.fill();
     g2d.rotate(-playerData.ship.angle)
     g2d.translate(-Math.floor(playerData.ship.x), -Math.floor(playerData.ship.y));
+
+    g2d.fillStyle = condensedRoom.clients[i].color;
 
     for (var j = 0; j < condensedRoom.clients[i].gameData.bullets.length; j++) {
       g2d.beginPath();
@@ -66,8 +81,11 @@ function draw(condensedRoom, name) {
   g2d.translate(-tempx,-tempy);
 
   g2d.fillStyle = healthColor;
+  g2d.textAlign = "center";
 
-  g2d.fillRect(20, 460, health * 710 / 100, 20);
+  g2d.font = "30px"
+
+  g2d.fillRect(20, 560, health * 1210 / 100, 20);
 
 }
 
@@ -75,8 +93,90 @@ function clearCanvas () {
   var g2d = document.getElementById("gameCanvas").getContext("2d");
 
   g2d.fillStyle="white";
-  g2d.fillRect(0,0,750,500);
+  g2d.fillRect(0,0,1250,600);
 
-  g2
 
 }
+
+function HextoRGB(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function RGBtoHSV () {
+    var rr, gg, bb,
+        r = arguments[0] / 255,
+        g = arguments[1] / 255,
+        b = arguments[2] / 255,
+        h, s,
+        v = Math.max(r, g, b),
+        diff = v - Math.min(r, g, b),
+        diffc = function(c){
+            return (v - c) / 6 / diff + 1 / 2;
+        };
+
+    if (diff == 0) {
+        h = s = 0;
+    } else {
+        s = diff / v;
+        rr = diffc(r);
+        gg = diffc(g);
+        bb = diffc(b);
+
+        if (r === v) {
+            h = bb - gg;
+        }else if (g === v) {
+            h = (1 / 3) + rr - bb;
+        }else if (b === v) {
+            h = (2 / 3) + gg - rr;
+        }
+        if (h < 0) {
+            h += 1;
+        }else if (h > 1) {
+            h -= 1;
+        }
+    }
+    return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        v: Math.round(v * 100)
+    };
+}
+
+function HSVtoHex(h, s, v) {
+  var rgb, i, data = [];
+  if (s === 0) {
+    rgb = [v,v,v];
+  } else {
+    h = h / 60;
+    i = Math.floor(h);
+    data = [v*(1-s), v*(1-s*(h-i)), v*(1-s*(1-(h-i)))];
+    switch(i) {
+      case 0:
+        rgb = [v, data[2], data[0]];
+        break;
+      case 1:
+        rgb = [data[1], v, data[0]];
+        break;
+      case 2:
+        rgb = [data[0], v, data[2]];
+        break;
+      case 3:
+        rgb = [data[0], data[1], v];
+        break;
+      case 4:
+        rgb = [data[2], data[0], v];
+        break;
+      default:
+        rgb = [v, data[0], data[1]];
+        break;
+    }
+  }
+  return '#' + rgb.map(function(x){
+    return ("0" + Math.round(x*255).toString(16)).slice(-2);
+  }).join('');
+};
