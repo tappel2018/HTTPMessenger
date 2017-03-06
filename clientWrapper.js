@@ -4,11 +4,10 @@ function clientWrapper (socket, name, uuid) {
   this.name = name;
   this.uuid = uuid;
 
-  //I'm gonna treat this as a false boolean and empty string
   this.room = "";
   this.connectTime = new Date();
   this.color = HSVtoHex(360*clientWrapper.angle, 1.0, 0.7);
-  clientWrapper.angle += 0.61803398875;
+  clientWrapper.angle += 0.61803398875; //Inverse golden ratio; ensures colors are different enough from each other
   clientWrapper.angle %= 1;
 
   this.keyMap = {};

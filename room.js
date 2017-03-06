@@ -50,6 +50,12 @@ function Room(name, size) {
 
   this.removeClient = function(client) {
     this.isLocked = true;
+    setTimeout(function() {
+      myself.trueRemoveClient(client);
+    }, 50)
+  }
+
+  this.trueRemoveClient = function(client) {
     for (var i = 0; i < this.clients.length; i++) {
       if (this.clients[i].uuid == client.uuid) {
         delete client.gameData;
@@ -68,7 +74,7 @@ function Room(name, size) {
     }
     Room.roomEmitter.emit("roomUpdate");
     this.isLocked = false;
-    return;
+
   }
 
   this.message = function(client, data) {

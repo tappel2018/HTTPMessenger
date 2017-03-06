@@ -18,6 +18,7 @@ try {
     var boostReturnAcceleration = 0.00025;
     var boostMaxSpeed = 0.3;
     var boostDrain = 6.5;
+    var boostPointDrain = 1;
 
     var maxHealth = 100;
     var drainRate = 1;
@@ -26,11 +27,12 @@ try {
 
     var bulletTimeOut = 300;
 
-    var turnSpeed = 0.005;
+    var turnSpeed = 0.004;
 
     var worldSize = 2000;
 
     var bulletSpeed = 0.4;
+    var killBonus = 100;
 
     //returns changed room
     exports.makeCorrections = function(condensedRoomClient, condensedRoomActual, dt){
@@ -183,9 +185,12 @@ try {
 
         } else {
           curClient.gameData.health -= boostDrain * dt / 1000;
+          curClient.gameData -= boostPointDrain * dt / 1000;
 
           exports.accelerateShip(curClient.gameData.ship, boostAcceleration * dt);
         }
+
+        curClient.gameData.health += healRate * dt / 1000;
 
         if (curClient.keyMap[37]) {
           exports.rotateShip(curClient.gameData.ship, -turnSpeed * dt);
@@ -238,15 +243,15 @@ try {
           }
           exports.updateBullet(curBullet, dt);
 
-          var circle = new SAT.Circle(SAT.Vector(curBullet.x, curBullet.y), 5);
+          var point = new SAT.Vector(curBullet.x, curBullet.y);
           for (var k = 0; k < newCondensedRoom.clients.length; k++) {
             if (i == k) continue;
             var otherClient = newCondensedRoom.clients[k];
-            if (SAT.testPolygonCircle(otherClient.gameData.ship.polygon1, circle)
-            ||  SAT.testPolygonCircle(otherClient.gameData.ship.polygon2, circle) ) {
+            if (SAT.pointInPolygon(point, otherClient.gameData.ship.polygon1)
+            ||  SAT.pointInPolygon(point, otherClient.gameData.ship.polygon2) ) {
               otherClient.gameData.health -= curBullet.damage;
+              curClient.gameData.points += curBullet.damage + ((otherClient.gameData.health < 0) ? 0 : killBonus);
               curClient.gameData.bullets.splice(j, 1);
-              curClient.gameData.points += curBullet.damage;
             }
           }
 
@@ -265,7 +270,6 @@ try {
             room.clients[i].leaveRoom();
           }
         }
-        curClient.gameData.health += healRate * dt / 1000;
       }
 
       return newCondensedRoom;

@@ -91,14 +91,14 @@ socket.on('roomUpdate', function (data) {
     pane.appendChild(toAppend);
   }
 
-  if (this.currentRoom != null) {
-    this.currentRoom.clients.forEach(function(client) {
-      var nameToAppend = document.createElement("li");
-      nameToAppend.appendChild(document.createTextNode(client));
-      document.getElementById("nameList").appendChild(nameToAppend);
-
-    });
-  }
+  // if (this.currentRoom != null) {
+  //   this.currentRoom.clients.forEach(function(client) {
+  //     var nameToAppend = document.createElement("li");
+  //     nameToAppend.appendChild(document.createTextNode(client));
+  //     document.getElementById("nameList").appendChild(nameToAppend);
+  //
+  //   });
+  // }
 
 
 });
