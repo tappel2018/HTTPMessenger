@@ -1,4 +1,4 @@
-port        = process.env.PORT || 81,
+port        = process.env.PORT || 80,
 
 express         = require('express'),
 UUID            = require('uuid'),

@@ -36,7 +36,7 @@ try {
 
     //returns changed room
     exports.makeCorrections = function(condensedRoomClient, condensedRoomActual, dt){
-      //TODO: make corrections
+
       var newCondensedRoom = new CondensedRoom(condensedRoomActual, true);
 
       for (var i = 0; i < newCondensedRoom.clients.length; i++) {
@@ -55,26 +55,30 @@ try {
           }
 
         } catch(e) {
-          console.log(e);
+
         }
       }
 
       for (var i = 0; i <newCondensedRoom.clients.length; i++) {
-        var ship =newCondensedRoom.clients[i].gameData.ship;
-        ship.polygon1 =  new SAT.Polygon(new SAT.Vector(ship.x,ship.y), [
-                    new SAT.Vector(0, 0),
-                    new SAT.Vector(30,0),
-                    new SAT.Vector(-30, 24),
-                    new SAT.Vector(-21,0)
-                  ]);
-        ship.polygon2 = new SAT.Polygon(new SAT.Vector(ship.x,ship.y), [
-                    new SAT.Vector(0, 0),
-                    new SAT.Vector(30,0),
-                    new SAT.Vector(-30, -24),
-                    new SAT.Vector(-21,0)
-                  ]);
-        ship.polygon1.rotate(ship.angle);
-        ship.polygon2.rotate(ship.angle);
+        try {
+          var ship =newCondensedRoom.clients[i].gameData.ship;
+          ship.polygon1 =  new SAT.Polygon(new SAT.Vector(ship.x,ship.y), [
+                      new SAT.Vector(0, 0),
+                      new SAT.Vector(30,0),
+                      new SAT.Vector(-30, 24),
+                      new SAT.Vector(-21,0)
+                    ]);
+          ship.polygon2 = new SAT.Polygon(new SAT.Vector(ship.x,ship.y), [
+                      new SAT.Vector(0, 0),
+                      new SAT.Vector(30,0),
+                      new SAT.Vector(-30, -24),
+                      new SAT.Vector(-21,0)
+                    ]);
+          ship.polygon1.rotate(ship.angle);
+          ship.polygon2.rotate(ship.angle);
+        } catch (e) {
+
+        }
       }
 
       return newCondensedRoom;
@@ -165,110 +169,115 @@ try {
       var newCondensedRoom = new CondensedRoom(condensedRoom, true);
 
       for (var i = 0; i <newCondensedRoom.clients.length; i++) {
-        var curClient =newCondensedRoom.clients[i];
-        exports.updatePolygons(curClient.gameData.ship);
+        try {
+          var curClient =newCondensedRoom.clients[i];
+          exports.updatePolygons(curClient.gameData.ship);
 
-        if (curClient.keyMap[88]) {
-          curClient.gameData.isBoosting = true;
-        } else {
-          curClient.gameData.isBoosting = false;
-        }
-
-        if (!curClient.gameData.isBoosting) {
-
-          if (curClient.keyMap[38]) {
-            exports.accelerateShip(curClient.gameData.ship,acceleration * dt);
-          }
-          if (curClient.keyMap[40]) {
-            exports.accelerateShip(curClient.gameData.ship,-acceleration * dt);
+          if (curClient.keyMap[88]) {
+            curClient.gameData.isBoosting = true;
+          } else {
+            curClient.gameData.isBoosting = false;
           }
 
-        } else {
-          curClient.gameData.health -= boostDrain * dt / 1000;
-          curClient.gameData -= boostPointDrain * dt / 1000;
+          if (!curClient.gameData.isBoosting) {
 
-          exports.accelerateShip(curClient.gameData.ship, boostAcceleration * dt);
-        }
+            if (curClient.keyMap[38]) {
+              exports.accelerateShip(curClient.gameData.ship,acceleration * dt);
+            }
+            if (curClient.keyMap[40]) {
+              exports.accelerateShip(curClient.gameData.ship,-acceleration * dt);
+            }
 
-        curClient.gameData.health += healRate * dt / 1000;
+          } else {
+            curClient.gameData.health -= boostDrain * dt / 1000;
+            curClient.gameData.points -= boostPointDrain * dt / 1000;
 
-        if (curClient.keyMap[37]) {
-          exports.rotateShip(curClient.gameData.ship, -turnSpeed * dt);
-        }
-
-        if (curClient.keyMap[39]) {
-          exports.rotateShip(curClient.gameData.ship, turnSpeed * dt );
-        }
-
-        if (curClient.gameData.ship.x < 0 ) {
-          exports.accelerateShip(curClient.gameData.ship, borderAcceleration * dt, 0);
-        }
-
-        if (curClient.gameData.ship.x > worldSize ) {
-          exports.accelerateShip(curClient.gameData.ship, -borderAcceleration* dt, 0);
-        }
-
-        if (curClient.gameData.ship.y < 0 ) {
-          exports.accelerateShip(curClient.gameData.ship, 0, borderAcceleration* dt);
-        }
-
-        if (curClient.gameData.ship.y > worldSize ) {
-          exports.accelerateShip(curClient.gameData.ship, 0, -borderAcceleration* dt);
-        }
-
-
-        if (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy > maxSpeed * maxSpeed)
-          exports.accelerateShip(curClient.gameData.ship,
-            -boostReturnAcceleration * dt * Math.sign(curClient.gameData.ship.vx) * Math.abs(Math.cos(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
-            * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy) / (maxSpeed * maxSpeed),
-            -boostReturnAcceleration * dt * Math.sign (curClient.gameData.ship.vy) * Math.abs(Math.sin(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
-            * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy ) / (maxSpeed * maxSpeed));
-
-        exports.updateShip(curClient.gameData.ship,dt);
-
-        curClient.gameData.curTimeOut -= dt;
-        if (curClient.gameData.curTimeOut < 0) curClient.gameData.curTimeOut = 0;
-
-        if (curClient.keyMap[90] && curClient.gameData.curTimeOut == 0) {
-          curClient.gameData.bullets.push(new exports.Bullet(curClient));
-          curClient.gameData.curTimeOut = curClient.gameData.bulletTimeOut;
-          curClient.gameData.health -= bulletCost;
-        }
-
-        for (var j = 0; j < curClient.gameData.bullets.length; j++) {
-          var curBullet = curClient.gameData.bullets[j];
-          if (curBullet.x < -1000 || curBullet.x > worldSize + 1000 || curBullet.y < -1000 || curBullet.y > worldSize + 1000) {
-            curClient.gameData.bullets.splice(j, 1);
-            j--;
+            exports.accelerateShip(curClient.gameData.ship, boostAcceleration * dt);
           }
-          exports.updateBullet(curBullet, dt);
 
-          var point = new SAT.Vector(curBullet.x, curBullet.y);
-          for (var k = 0; k < newCondensedRoom.clients.length; k++) {
-            if (i == k) continue;
-            var otherClient = newCondensedRoom.clients[k];
-            if (SAT.pointInPolygon(point, otherClient.gameData.ship.polygon1)
-            ||  SAT.pointInPolygon(point, otherClient.gameData.ship.polygon2) ) {
-              otherClient.gameData.health -= curBullet.damage;
-              curClient.gameData.points += curBullet.damage + ((otherClient.gameData.health < 0) ? 0 : killBonus);
+          curClient.gameData.health += healRate * dt / 1000;
+
+          if (curClient.keyMap[37]) {
+            exports.rotateShip(curClient.gameData.ship, -turnSpeed * dt);
+          }
+
+          if (curClient.keyMap[39]) {
+            exports.rotateShip(curClient.gameData.ship, turnSpeed * dt );
+          }
+
+          if (curClient.gameData.ship.x < 0 ) {
+            exports.accelerateShip(curClient.gameData.ship, borderAcceleration * dt, 0);
+          }
+
+          if (curClient.gameData.ship.x > worldSize ) {
+            exports.accelerateShip(curClient.gameData.ship, -borderAcceleration* dt, 0);
+          }
+
+          if (curClient.gameData.ship.y < 0 ) {
+            exports.accelerateShip(curClient.gameData.ship, 0, borderAcceleration* dt);
+          }
+
+          if (curClient.gameData.ship.y > worldSize ) {
+            exports.accelerateShip(curClient.gameData.ship, 0, -borderAcceleration* dt);
+          }
+
+
+          if (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy > maxSpeed * maxSpeed)
+            exports.accelerateShip(curClient.gameData.ship,
+              -boostReturnAcceleration * dt * Math.sign(curClient.gameData.ship.vx) * Math.abs(Math.cos(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
+              * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy) / (maxSpeed * maxSpeed),
+              -boostReturnAcceleration * dt * Math.sign (curClient.gameData.ship.vy) * Math.abs(Math.sin(Math.atan(curClient.gameData.ship.vy/curClient.gameData.ship.vx)))
+              * (curClient.gameData.ship.vx * curClient.gameData.ship.vx + curClient.gameData.ship.vy * curClient.gameData.ship.vy ) / (maxSpeed * maxSpeed));
+
+          exports.updateShip(curClient.gameData.ship,dt);
+
+          curClient.gameData.curTimeOut -= dt;
+          if (curClient.gameData.curTimeOut < 0) curClient.gameData.curTimeOut = 0;
+
+          if (curClient.keyMap[90] && curClient.gameData.curTimeOut == 0) {
+            curClient.gameData.bullets.push(new exports.Bullet(curClient));
+            curClient.gameData.curTimeOut = curClient.gameData.bulletTimeOut;
+            curClient.gameData.health -= bulletCost;
+          }
+
+          for (var j = 0; j < curClient.gameData.bullets.length; j++) {
+            var curBullet = curClient.gameData.bullets[j];
+            if (curBullet.x < -1000 || curBullet.x > worldSize + 1000 || curBullet.y < -1000 || curBullet.y > worldSize + 1000) {
               curClient.gameData.bullets.splice(j, 1);
+              j--;
+            }
+            exports.updateBullet(curBullet, dt);
+
+            var point = new SAT.Vector(curBullet.x, curBullet.y);
+            for (var k = 0; k < newCondensedRoom.clients.length; k++) {
+              if (i == k) continue;
+              var otherClient = newCondensedRoom.clients[k];
+              if (SAT.pointInPolygon(point, otherClient.gameData.ship.polygon1)
+              ||  SAT.pointInPolygon(point, otherClient.gameData.ship.polygon2) ) {
+                otherClient.gameData.health -= curBullet.damage;
+                curClient.gameData.points += (otherClient.gameData.health < 0) ? killBonus : curBullet.damage;
+                curClient.gameData.bullets.splice(j, 1);
+              }
+            }
+
+
+          }
+
+          if (curClient.gameData.health > maxHealth) {
+            curClient.gameData.health = maxHealth;
+          }
+          if (curClient.gameData.health < 0) {
+            if (isClient && name == curClient.name) {
+              clientGameData = null;
+              serverGameData = null;
+              leaveRoom();
+
+            } else if (!isClient){
+
             }
           }
+        } catch (e) {
 
-
-        }
-
-        if (curClient.gameData.health > maxHealth) {
-          curClient.gameData.health = maxHealth;
-        }
-        if (curClient.gameData.health < 0) {
-          if (isClient && name == curClient.name) {
-            clientGameData = null;
-            serverGameData = null;
-            interrupt = true;
-          } else if (!isClient){
-            room.clients[i].leaveRoom();
-          }
         }
       }
 

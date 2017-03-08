@@ -145,7 +145,10 @@ socket.on('roomLeft', function (data) {
     document.getElementById("serverContainer").appendChild(toAppend);
   }
 
-  this.currentRoom = null;
+  currentRoom = null;
+
+  clientGameData = null;
+  serverGameData = null;
 
   interrupt = true;
 

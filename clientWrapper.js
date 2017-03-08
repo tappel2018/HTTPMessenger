@@ -13,19 +13,18 @@ function clientWrapper (socket, name, uuid) {
   this.keyMap = {};
 
   this.disconnect = function() {
-    console.log("Player disconnected: " + myself.uuid);
     myself.leaveRoom();
     return;
   }
 
   this.receiveMessage = function(data) {
 
-    console.log("User: " + myself.uuid + " / Message: " + data.msg)
-
     if (myself.room == "") {
       myself.socket.emit("messageFromServer", {msg: "Invalid request: not in a room"});
       return;
     }
+
+    data.msg = data.msg.substring(0, 50);
 
     if (data.msg != "") {
       myself.room.message(myself, data);
@@ -45,8 +44,6 @@ function clientWrapper (socket, name, uuid) {
 
   this.joinRoom = function (data) {
     //Find room of same id
-    console.log("Player: " + myself.uuid + " joining room: " + data.uuid);
-
 
     if (data.uuid == myself.room.uuid) {
       myself.socket.emit("messageFromServer", {msg: "You are already in room: " + myself.room.name });
@@ -63,13 +60,13 @@ function clientWrapper (socket, name, uuid) {
       }
     });
 
-    if (room.size == room.clients.length) {
-      myself.socket.emit("messageFromServer", {msg: room.name + " is full."});
+    if (typeof room === undefined ){
+      myself.socket.emit("messageFromServer", {msg: "The room that you tried to request does not exist."});
       return;
     }
 
-    if (typeof room === undefined ){
-      myself.socket.emit("messageFromServer", {msg: "The room that you tried to request does not exist."});
+    if (room.size == room.clients.length) {
+      myself.socket.emit("messageFromServer", {msg: room.name + " is full."});
       return;
     }
 
@@ -111,8 +108,6 @@ function clientWrapper (socket, name, uuid) {
   }
 
   this.leaveRoom = function () {
-
-    console.log("Player: " + myself.uuid + " leaving room: " + myself.room.uuid);
 
     try {
       myself.room.removeClient(myself);

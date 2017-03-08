@@ -7,7 +7,6 @@ Physics = require("./public/shared/physics.js")
 function Room(name, size) {
   var myself = this;
 
-  console.log("Here");
   this.uuid = UUID();
   this.name = name;
   this.size = size;
@@ -18,6 +17,8 @@ function Room(name, size) {
   this.prevTime = (new Date()).getTime();
 
   this.isLocked = true;
+
+  this.queue = new EventEmitter();
 
   this.addClient = function (client) {
 
@@ -32,9 +33,6 @@ function Room(name, size) {
     Physics.initClient(client)
 
     this.clients.push(client);
-
-    console.log(myself.clients);
-
 
     if (this.clients.length == 1) {
       this.init();
@@ -87,24 +85,38 @@ function Room(name, size) {
 
   this.update = function() {
 
-    if (this.islocked)
-      setTimeout(function() {myself.update()}, 5);
-    var dt = (new Date()).getTime() - this.prevTime;
-    this.prevTime = new Date();
-    var condensedRoom = Physics.calculatePhysics(myself, dt, "", myself);
-    setTimeout(function() {myself.update()}, 15);
+    if (this.islocked) {
+      setTimeout(function() {myself.update()}, 100);
+      return;
+    }
+
+    try {
+      var dt = (new Date()).getTime() - this.prevTime;
+      this.prevTime = new Date();
+      var condensedRoom = Physics.calculatePhysics(myself, dt, "", myself);
+      setTimeout(function() {myself.update()}, 15);
+    } catch(e) {
+      console.log(e)
+    }
   }
 
   this.sendData = function () {
 
-    if (this.islocked)
-      setTimeout(function() {myself.update()}, 5);
+    if (this.islocked) {
+      setTimeout(function() {myself.update()}, 100);
+      return;
+    }
 
     for (var i = 0; i <myself.clients.length; i++) {
-     myself.clients[i].socket.emit("gameData", {roomData: new CondensedRoom(myself, true)});
+      this.queue.emit("sendData", {client: i})
     }
+
     setTimeout(function() {myself.sendData()}, 20);
   }
+
+  this.queue.on("sendData", function (data) {
+    myself.clients[data.client].socket.emit("gameData", {roomData: new CondensedRoom(myself, true)});
+  }); 
 
 
 

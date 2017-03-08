@@ -40,9 +40,10 @@ function draw(condensedRoom, name) {
   for (var i = 0; i < condensedRoom.clients.length; i++) {
     if (condensedRoom.clients[i].gameData.isBoosting) {
       var RGB = HextoRGB(condensedRoom.clients[i].color);
+      console.log(RGB)
       var HSV = RGBtoHSV(RGB.r, RGB.g, RGB.b);
-      HSV.s -= 5;
-      g2d.fillStyle = HSVtoHex(HSV.h / 360, HSV.s / 100, HSV.v / 100);
+      console.log(HSV);
+      g2d.fillStyle = HSVtoHex(HSV.h / 360.0, 0.7, 0.7);
     } else {
       g2d.fillStyle = condensedRoom.clients[i].color;
 
@@ -85,25 +86,25 @@ function draw(condensedRoom, name) {
   var tempClients = (new CondensedRoom(condensedRoom, true)).clients;
 
   tempClients.sort(function (a, b) {
-    return a.points - b.points;
+    return b.points - a.points;
   })
 
   try {
     g2d.fillStyle = tempClients[0].color;
-    g2d.fillText(tempClients[0].name + ": " + tempClients[0].gameData.points,1210, 50)
+    g2d.fillText(tempClients[0].name + ": " + Math.round(tempClients[0].gameData.points),1210, 50)
 
     g2d.fillStyle = tempClients[1].color;
-    g2d.fillText(tempClients[1].name + ": " + tempClients[1].gameData.points,1210, 90)
+    g2d.fillText(tempClients[1].name + ": " + Math.round(tempClients[1].gameData.points),1210, 90)
 
     g2d.fillStyle = tempClients[2].color;
-    g2d.fillText(tempClients[2].name + ": " + tempClients[2].gameData.points,1210, 130)
+    g2d.fillText(tempClients[2].name + ": " + Math.round(tempClients[2].gameData.points),1210, 130)
   } catch (e) {
 
   }
 
   g2d.fillStyle = healthColor;
   g2d.textAlign = "left";
-  g2d.fillText(points, 20, 50);
+  g2d.fillText(Math.round(points), 20, 50);
 
   g2d.fillRect(20, 560, health * 1210 / 100, 20);
 
